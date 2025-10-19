@@ -1,0 +1,45 @@
+*&---------------------------------------------------------------------*
+*& Report zst67_alv_ida_fieldcatalog
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zst67_alv_ida_fieldcatalog.
+DATA: lr_salv TYPE REF TO if_salv_gui_table_ida.
+DATA: lr_fcat TYPE REF TO if_salv_gui_field_catalog_ida.
+TRY.
+cl_salv_gui_table_ida=>create(
+  EXPORTING
+    iv_table_name       =  'SFLIGHT'
+  RECEIVING
+    ro_alv_gui_table_ida = lr_salv ).
+  CATCH cx_salv_db_connection.
+  CATCH cx_salv_db_table_not_supported.
+  CATCH cx_salv_ida_contract_violation.
+ENDTRY.
+* Get the field catalog reference
+lr_fcat = lr_salv->field_catalog( ).
+* Get all the fields
+lr_fcat->get_available_fields(
+  IMPORTING
+    ets_field_names = DATA(lt_field) ).
+* Delete few fields as needed
+LOOP AT lt_field ASSIGNING FIELD-SYMBOL(<fs_field>).
+IF <fs_field> = 'SEATSMAX_B'  OR <fs_field> = 'SEATSOCC_B'
+OR <fs_field> = 'SEATSMAX_F'  OR <fs_field> = 'SEATSOCC_F'.
+DELETE lt_field INDEX sy-tabix.
+ENDIF.
+ENDLOOP.
+* Set back the fields to be displayed
+TRY.
+lr_fcat->set_available_fields( its_field_names = lt_field ).
+  CATCH cx_salv_ida_unknown_name.
+ENDTRY.
+* Set maximum rows to display
+TRY.
+lr_salv->set_maximum_number_of_rows(
+  EXPORTING
+    iv_number_of_rows = 10 ).
+  CATCH cx_salv_param_out_of_bounds.
+ENDTRY.
+* Display ALV
+lr_salv->fullscreen( )->display( ).
