@@ -1,0 +1,23 @@
+REPORT zst67_alv_ida_parameters.
+
+PARAMETERS: p_carrid TYPE sflight-carrid.
+DATA: lr_salv TYPE REF TO if_salv_gui_table_ida,
+             lr_cond_fact TYPE REF TO if_salv_ida_condition_factory,
+             lr_cond TYPE REF TO if_salv_ida_condition.
+cl_salv_gui_table_ida=>create(
+  EXPORTING
+    iv_table_name       =  'SFLIGHT'
+  RECEIVING
+    ro_alv_gui_table_ida = lr_salv ).
+* Instantiate Condition Factory
+lr_cond_fact = lr_salv->condition_factory( ).
+* Set the parameter value & get condition reference
+lr_cond =  lr_cond_fact->equals( name = 'CARRID' value = p_carrid ).
+
+*Set the condition for data retrieval
+lr_salv->set_select_options(
+  EXPORTING
+*    it_ranges                     =
+    io_condition                  = lr_cond ).
+* Display ALV
+lr_salv->fullscreen( )->display( ).
